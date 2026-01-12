@@ -8,25 +8,34 @@
 
 class VirtualALU {
 private:
-    void print_alu_process(std::string& operator_name, int32_t a, int32_t b, int32_t res) {
+    bool carry = 0;
+
+    bool half_adder(bool a, bool b) {
+        
+    }
+    bool full_adder(bool a, bool b) {
+
+    }
+
+    void print_alu_process(std::string& operator_name, bool a, bool b, bool res) {
 
     }
 public:
-    int32_t add(int32_t a, int32_t b) {
+    bool add(bool a, bool b) {
 
     }
-    int32_t subtraction(int32_t a, int32_t b) {
+    bool subtraction(bool a, bool b) {
 
     }
-    int32_t multiplication(int32_t a, int32_t b) {
+    bool multiplication(bool a, bool b) {
 
     }
-    int32_t division(int32_t a, int32_t b) {
+    bool division(bool a, bool b) {
 
     }
 
 
-    int32_t negate(int32_t num) {
+    bool negate(bool num) {
 
     }
 };
@@ -167,20 +176,20 @@ std::vector<std::string> shunting_yard_algorithm(std::string_view expr) {
 
 
 
-int32_t stack_machine(std::vector<std::string>& rpn) {
-    std::stack<int32_t> result;
+bool stack_machine(std::vector<std::string>& rpn) {
+    std::stack<bool> result;
     VirtualALU alu;
 
     for (auto it = rpn.begin(); it != rpn.end(); it++) {
         if (*it == "~") {
-            int32_t num = result.top();
+            bool num = result.top();
             result.pop();
             result.push(alu.negate(num));
         }
         else if (*it == "+" || *it == "-" || *it == "*" || *it == "/") {
-            int32_t a = result.top();
+            bool a = result.top();
             result.pop();
-            int32_t b = result.top();
+            bool b = result.top();
             result.pop();
             if (*it == "+") {
                 result.push(alu.add(a, b));
