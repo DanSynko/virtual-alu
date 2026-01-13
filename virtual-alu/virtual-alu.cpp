@@ -5,38 +5,63 @@
 #include <string_view>
 #include <algorithm>
 #include <cstdint>
+#include <bitset>
+#include <format>
 
 class VirtualALU {
 private:
     bool carry = 0;
+    bool carry_second = 0;
 
+    /*struct Flags {
+        bool CARRY_FLAG = 0;
+    };*/
+
+    
     bool half_adder(bool a, bool b) {
+        carry = a && b;
+        return a ^ b;
+    }
+
+    bool full_adder(bool a, bool b) {
+        bool result_first = a ^ b;
+        bool result_second = result_first ^ carry;
+        carry_second = result_first && carry;
+        carry = a && b;
+        carry = carry || carry_second;
+        return result_second;
+    }
+
+    
+    void print_alu_process(std::string operator_name, std::bitset<64> a, std::bitset<64> b, std::bitset<64> res) {
         
     }
-    bool full_adder(bool a, bool b) {
 
-    }
-
-    void print_alu_process(std::string& operator_name, bool a, bool b, bool res) {
-
-    }
 public:
-    bool add(bool a, bool b) {
-
-    }
-    bool subtraction(bool a, bool b) {
-
-    }
-    bool multiplication(bool a, bool b) {
-
-    }
-    bool division(bool a, bool b) {
-
+    std::bitset<64> addition(std::bitset<64> a, std::bitset<64> b) {
+        carry = 0;
+        std::bitset<64> result(half_adder(a.test(0), b.test(0)));
+        for (int i = 1; i < 64; i++) {
+            result[i] = full_adder(a[i], b[i]);
+        }
+        return result;
     }
 
+    std::bitset<64> subtraction(std::bitset<64> a, std::bitset<64> b) {
+        
+    }
 
-    bool negate(bool num) {
+    std::bitset<64> multiplication(std::bitset<64> a, std::bitset<64> b) {
+        
+    }
 
+    std::bitset<64> division(std::bitset<64> a, std::bitset<64> b) {
+        
+    }
+
+    
+    std::bitset<64> negate(std::bitset<64> num) {
+        
     }
 };
 
@@ -176,40 +201,41 @@ std::vector<std::string> shunting_yard_algorithm(std::string_view expr) {
 
 
 
-bool stack_machine(std::vector<std::string>& rpn) {
-    std::stack<bool> result;
+std::bitset<64> stack_machine(std::vector<std::string>& rpn) {
+    std::stack<std::bitset<64>> nums;
     VirtualALU alu;
 
     for (auto it = rpn.begin(); it != rpn.end(); it++) {
-        if (*it == "~") {
-            bool num = result.top();
-            result.pop();
-            result.push(alu.negate(num));
-        }
-        else if (*it == "+" || *it == "-" || *it == "*" || *it == "/") {
-            bool a = result.top();
-            result.pop();
-            bool b = result.top();
-            result.pop();
+        /*if (*it == "~") {
+            std::bitset<64> num = nums.top();
+            nums.pop();
+            nums.push(alu.negate(num));
+        }*/
+        if (*it == "+" || *it == "-" || *it == "*" || *it == "/") {
+            std::bitset<64> a = nums.top();
+            nums.pop();
+            std::bitset<64> b = nums.top();
+            nums.pop();
             if (*it == "+") {
-                result.push(alu.add(a, b));
+                nums.push(alu.addition(a, b));
             }
-            else if (*it == "-") {
-                result.push(alu.subtraction(b, a));
+            /*else if (*it == "-") {
+                nums.push(alu.subtraction(b, a));
             }
             else if (*it == "*") {
-                result.push(alu.multiplication(a, b));
+                nums.push(alu.multiplication(a, b));
             }
             else if (*it == "/") {
-                result.push(alu.division(b, a));
-            }
+                nums.push(alu.division(b, a));
+            }*/
         }
         else {
-            result.push(std::stoi(*it));
+            int num = std::stoi(*it);
+            nums.push(std::bitset<64>(num));
         }
     }
 
-    return result.top();
+    return nums.top();
 }
 
 
@@ -253,9 +279,11 @@ int main()
         }
         std::cout << '\n' << std::endl;
 
-
-
-        std::cout << "result: " << stack_machine(RPN) << std::endl;
+        std::bitset<64> res = stack_machine(RPN);
+        std::string res_bin = res.to_string();
+        unsigned long long res_dec = res.to_ullong();
+        std::cout << "result in 2-Bin: " << res_bin << std::endl;
+        std::cout << "result in 10-Dec: " << res_dec << std::endl;
         std::cout << "----------------------------------------------------------------------------------------------\n" << std::endl;
     }
 
