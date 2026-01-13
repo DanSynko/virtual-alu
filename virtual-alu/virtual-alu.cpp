@@ -6,18 +6,12 @@
 #include <algorithm>
 #include <cstdint>
 #include <bitset>
-#include <format>
 
 class VirtualALU {
 private:
     bool carry = 0;
     bool carry_second = 0;
 
-    /*struct Flags {
-        bool CARRY_FLAG = 0;
-    };*/
-
-    
     bool half_adder(bool a, bool b) {
         carry = a && b;
         return a ^ b;
@@ -33,22 +27,25 @@ private:
     }
 
     
-    void print_alu_process(std::string operator_name, std::bitset<64> a, std::bitset<64> b, std::bitset<64> res) {
+    /*void print_alu_process(std::string operator_name, std::bitset<64> a, std::bitset<64> b, std::bitset<64> res) {
         
-    }
+    }*/
 
 public:
-    std::bitset<64> addition(std::bitset<64> a, std::bitset<64> b) {
-        carry = 0;
-        std::bitset<64> result(half_adder(a.test(0), b.test(0)));
-        for (int i = 1; i < 64; i++) {
+    std::bitset<64> addition(std::bitset<64> a, std::bitset<64> b, bool SUB) {
+        for (int i = 0; i < 64; i++) {
+            b[i] = b[i] ^ SUB;
+        }
+        carry = SUB;
+        std::bitset<64> result;
+        for (int i = 0; i < 64; i++) {
             result[i] = full_adder(a[i], b[i]);
         }
         return result;
     }
 
     std::bitset<64> subtraction(std::bitset<64> a, std::bitset<64> b) {
-        
+        return addition(a, b, 1);
     }
 
     std::bitset<64> multiplication(std::bitset<64> a, std::bitset<64> b) {
@@ -59,9 +56,16 @@ public:
         
     }
 
-    
+
+    std::bitset<64> incrementator(std::bitset<64> num) {
+        carry = 1;
+        for (int i = 0; carry == 1; i++) {
+            num[i] = half_adder(num[i], 1);
+        }
+        return num;
+    }
     std::bitset<64> negate(std::bitset<64> num) {
-        
+        return incrementator(~num);
     }
 };
 
@@ -206,23 +210,23 @@ std::bitset<64> stack_machine(std::vector<std::string>& rpn) {
     VirtualALU alu;
 
     for (auto it = rpn.begin(); it != rpn.end(); it++) {
-        /*if (*it == "~") {
+        if (*it == "~") {
             std::bitset<64> num = nums.top();
             nums.pop();
             nums.push(alu.negate(num));
-        }*/
-        if (*it == "+" || *it == "-" || *it == "*" || *it == "/") {
+        }
+        else if (*it == "+" || *it == "-" || *it == "*" || *it == "/") {
             std::bitset<64> a = nums.top();
             nums.pop();
             std::bitset<64> b = nums.top();
             nums.pop();
             if (*it == "+") {
-                nums.push(alu.addition(a, b));
+                nums.push(alu.addition(a, b, 0));
             }
-            /*else if (*it == "-") {
+            else if (*it == "-") {
                 nums.push(alu.subtraction(b, a));
             }
-            else if (*it == "*") {
+            /*else if (*it == "*") {
                 nums.push(alu.multiplication(a, b));
             }
             else if (*it == "/") {
@@ -281,7 +285,8 @@ int main()
 
         std::bitset<64> res = stack_machine(RPN);
         std::string res_bin = res.to_string();
-        unsigned long long res_dec = res.to_ullong();
+        unsigned long long res_dec_u = res.to_ullong();
+        long long res_dec = static_cast<long long>(res_dec_u);
         std::cout << "result in 2-Bin: " << res_bin << std::endl;
         std::cout << "result in 10-Dec: " << res_dec << std::endl;
         std::cout << "----------------------------------------------------------------------------------------------\n" << std::endl;
