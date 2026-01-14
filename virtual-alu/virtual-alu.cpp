@@ -49,7 +49,12 @@ public:
     }
 
     std::bitset<64> multiplication(std::bitset<64> a, std::bitset<64> b) {
-        
+        std::bitset<64> result = 0;
+        for (int i = 0; i < 64; i++) {
+            if (b[i]) result = addition(result, a, 0);
+            a <<= 1;
+        }
+        return result;
     }
 
     std::bitset<64> division(std::bitset<64> a, std::bitset<64> b) {
@@ -226,10 +231,10 @@ std::bitset<64> stack_machine(std::vector<std::string>& rpn) {
             else if (*it == "-") {
                 nums.push(alu.subtraction(b, a));
             }
-            /*else if (*it == "*") {
+            else if (*it == "*") {
                 nums.push(alu.multiplication(a, b));
             }
-            else if (*it == "/") {
+            /*else if (*it == "/") {
                 nums.push(alu.division(b, a));
             }*/
         }
