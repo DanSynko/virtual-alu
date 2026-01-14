@@ -13,7 +13,7 @@ This project was created for learning how CPU works. It demonstrates how a proce
 * **bitwise operations;**
 
 ## Adders
-The adders are implemented in accordance with real hardware schematics.
+ALU methods are implemented in accordance with real hardware schematics shown below.
 
 ### Half adder
 ![half_adder.png](images/half_adder.png)
