@@ -58,7 +58,22 @@ public:
     }
 
     std::bitset<64> division(std::bitset<64> a, std::bitset<64> b) {
+        std::bitset<64> remainder = 0;
         
+        for(int i = 0; i < 64; ++i) {
+            remainder[0] = a[63];
+            a <<= 1;
+            std::bitset<64> temp = subtraction(remainder, b);
+            if (temp[63] == 1) {
+                a[0] = 0;
+            }
+            else {
+                remainder = temp;
+                a[0] = 1;
+            }
+            remainder <<= 1;
+        }
+        return a;
     }
 
 
@@ -234,9 +249,9 @@ std::bitset<64> stack_machine(std::vector<std::string>& rpn) {
             else if (*it == "*") {
                 nums.push(alu.multiplication(a, b));
             }
-            /*else if (*it == "/") {
+            else if (*it == "/") {
                 nums.push(alu.division(b, a));
-            }*/
+            }
         }
         else {
             int num = std::stoi(*it);
@@ -296,6 +311,5 @@ int main()
         std::cout << "result in 10-Dec: " << res_dec << std::endl;
         std::cout << "----------------------------------------------------------------------------------------------\n" << std::endl;
     }
-
     return 0;
 }
