@@ -7,8 +7,10 @@
 #include <cstdint>
 #include <bitset>
 
+
 class VirtualALU {
 private:
+
     bool carry = 0;
     bool carry_second = 0;
 
@@ -27,64 +29,68 @@ private:
     }
 
     
-    /*void print_alu_process(std::string operator_name, std::bitset<64> a, std::bitset<64> b, std::bitset<64> res) {
+    /*void print_alu_process(std::string operator_name, uint64_t a, uint64_t b, uint64_t res) {
         
     }*/
 
 public:
-    std::bitset<64> addition(std::bitset<64> a, std::bitset<64> b, bool SUB) {
-        for (int i = 0; i < 64; i++) {
-            b[i] = b[i] ^ SUB;
-        }
+    uint64_t addition(uint64_t a, uint64_t b, bool SUB) {
+        if (SUB) b = ~b;
         carry = SUB;
-        std::bitset<64> result;
-        for (int i = 0; i < 64; i++) {
-            result[i] = full_adder(a[i], b[i]);
+
+        uint64_t result = 0;
+
+        for (uint64_t i = 0; i < 64; ++i) {
+            result |= full_adder(a & 1ULL , b & 1ULL) << i;
+            a >>= 1;
+            b >>= 1;
         }
         return result;
     }
 
-    std::bitset<64> subtraction(std::bitset<64> a, std::bitset<64> b) {
+    uint64_t subtraction(uint64_t a, uint64_t b) {
         return addition(a, b, 1);
     }
 
-    std::bitset<64> multiplication(std::bitset<64> a, std::bitset<64> b) {
-        std::bitset<64> result = 0;
+    uint64_t multiplication(uint64_t a, uint64_t b) {
+        uint64_t result = 0;
         for (int i = 0; i < 64; i++) {
-            if (b[i]) result = addition(result, a, 0);
+            if (b & 1ULL) result = addition(result, a, 0);
             a <<= 1;
+            b >>= 1;
         }
         return result;
     }
 
-    std::bitset<64> division(std::bitset<64> a, std::bitset<64> b) {
-        std::bitset<64> remainder = 0;
-        
-        for(int i = 0; i < 64; ++i) {
-            remainder[0] = a[63];
-            a <<= 1;
-            std::bitset<64> temp = subtraction(remainder, b);
-            if (temp[63] == 1) {
-                a[0] = 0;
-            }
-            else {
-                remainder = temp;
-                a[0] = 1;
-            }
+    uint64_t division(uint64_t a, uint64_t b) {
+        uint64_t remainder = 0;
+
+        for (int i = 0; i < 64; ++i) {
+            uint64_t a_mask = (a >> 63) & 1ULL;
             remainder <<= 1;
+            remainder |= a_mask;
+            a <<= 1;
+            uint64_t temp = subtraction(remainder, b);
+            if (temp >> 63 == 0) {
+                remainder = temp;
+                a |= 1ULL;
+            }
         }
         return a;
     }
 
 
-    std::bitset<64> incrementator(std::bitset<64> num) {
+    uint64_t incrementator(uint64_t num) {
         carry = 1;
-        for (int i = 0; carry == 1; i++) {
-            num[i] = half_adder(num[i], 1);
+        uint64_t res = 0;
+        for (int i = 0; i < 64; ++i) {
+            uint64_t nummask = (num >> i) & 1ULL;
+            bool sum = half_adder(nummask, carry) << i;
+            res |= (uint64_t)sum << i;
         }
-        return num;
+        return res;
     }
-    std::bitset<64> negate(std::bitset<64> num) {
+    uint64_t negate(uint64_t num) {
         return incrementator(~num);
     }
 };
@@ -226,19 +232,19 @@ std::vector<std::string> shunting_yard_algorithm(std::string_view expr) {
 
 
 std::bitset<64> stack_machine(std::vector<std::string>& rpn) {
-    std::stack<std::bitset<64>> nums;
+    std::stack<uint64_t> nums;
     VirtualALU alu;
 
     for (auto it = rpn.begin(); it != rpn.end(); it++) {
         if (*it == "~") {
-            std::bitset<64> num = nums.top();
+            uint64_t num = nums.top();
             nums.pop();
             nums.push(alu.negate(num));
         }
         else if (*it == "+" || *it == "-" || *it == "*" || *it == "/") {
-            std::bitset<64> a = nums.top();
+            uint64_t a = nums.top();
             nums.pop();
-            std::bitset<64> b = nums.top();
+            uint64_t b = nums.top();
             nums.pop();
             if (*it == "+") {
                 nums.push(alu.addition(a, b, 0));
@@ -254,12 +260,11 @@ std::bitset<64> stack_machine(std::vector<std::string>& rpn) {
             }
         }
         else {
-            int num = std::stoi(*it);
-            nums.push(std::bitset<64>(num));
+            uint64_t num = std::stoull(*it);
+            nums.push(uint64_t(num));
         }
     }
-
-    return nums.top();
+    return std::bitset<64>(nums.top());
 }
 
 
@@ -303,12 +308,13 @@ int main()
         }
         std::cout << '\n' << std::endl;
 
-        std::bitset<64> res = stack_machine(RPN);
+        /*uint64_t res = stack_machine(RPN);
         std::string res_bin = res.to_string();
         unsigned long long res_dec_u = res.to_ullong();
         long long res_dec = static_cast<long long>(res_dec_u);
         std::cout << "result in 2-Bin: " << res_bin << std::endl;
-        std::cout << "result in 10-Dec: " << res_dec << std::endl;
+        std::cout << "result in 10-Dec: " << res_dec << std::endl;*/
+        std::cout << "result: " << stack_machine(RPN) << std::endl;
         std::cout << "----------------------------------------------------------------------------------------------\n" << std::endl;
     }
     return 0;
